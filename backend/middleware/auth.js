@@ -1,83 +1,75 @@
 /**
- * Authentication Middleware with Supabase Verification
- * Validates that the anonymous user ID exists in the database
+ * Authentication Middleware
+ * Validates anonymous user ID from frontend
+ * Auto-creates user if doesn't exist (README approach)
  */
 
-const { supabaseAdmin } = require('../config/supabase');
+const supabase = require('../config/supabase');
 
 module.exports = async function authMiddleware(req, res, next) {
   try {
-    // Get the anonymous ID from request headers
+    // Get anonymous ID from header (frontend generates this)
     const anonymousId = req.headers['x-anonymous-user-id'];
     
-    // Check if ID exists
     if (!anonymousId) {
-      return res.status(401).json({
-        error: 'Missing user ID. Please refresh the page.',
-        code: 'MISSING_USER_ID'
+      return res.status(401).json({ 
+        error: 'Missing user ID. Please refresh the page.' 
       });
     }
     
-    // Validate the format - frontend generates IDs like: user_1234567890_abc123def
+    // Validate format - frontend generates: user_<timestamp>_<random>
     if (!anonymousId.startsWith('user_')) {
-      return res.status(401).json({
-        error: 'Invalid user ID format. Please refresh the page.',
-        code: 'INVALID_FORMAT'
+      return res.status(401).json({ 
+        error: 'Invalid user ID format.' 
       });
     }
     
-    // Check if ID is too short
-    if (anonymousId.length < 20) {
-      return res.status(401).json({
-        error: 'Invalid user ID. Please refresh the page.',
-        code: 'INVALID_LENGTH'
-      });
-    }
-    
-    // Verify the user exists in Supabase
-    const { data: existingUser, error: userError } = await supabaseAdmin
+    // Check if user exists in Supabase
+    let { data: user, error } = await supabase
       .from('users')
-      .select('id, last_active')
+      .select('id, anonymous_id')
       .eq('anonymous_id', anonymousId)
       .single();
     
-    if (userError && userError.code !== 'PGRST116') {
-      // PGRST116 = not found, other errors are real issues
-      console.error('Supabase user lookup error:', userError);
-      return res.status(500).json({
-        error: 'Authentication service unavailable. Please try again later.',
-        code: 'SERVICE_ERROR'
-      });
+    // If user doesn't exist, create them (auto-register)
+    if (!user) {
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert([{
+          anonymous_id: anonymousId,
+          last_active: new Date().toISOString()
+        }])
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('Auto-create user error:', createError);
+        return res.status(500).json({ 
+          error: 'Failed to create user session' 
+        });
+      }
+      
+      user = newUser;
     }
     
-    if (!existingUser) {
-      // User doesn't exist - they need to create a session first
-      return res.status(401).json({
-        error: 'Session expired or not found. Please refresh the page.',
-        code: 'USER_NOT_FOUND'
-      });
-    }
-    
-    // Update last_active timestamp (async, don't wait for response)
-    supabaseAdmin
+    // Update last_active timestamp
+    await supabase
       .from('users')
       .update({ last_active: new Date().toISOString() })
-      .eq('anonymous_id', anonymousId)
-      .then(() => {})
-      .catch(err => console.error('Failed to update last_active:', err));
+      .eq('anonymous_id', anonymousId);
     
-    // Store user info on the request object
-    req.anonymousId = anonymousId;
-    req.userId = existingUser.id;
+    // Attach user info to request
+    req.user = {
+      id: user.id,
+      anonymous_id: anonymousId
+    };
     
-    // All good, proceed
     next();
     
   } catch (error) {
     console.error('Auth middleware error:', error);
-    return res.status(500).json({
-      error: 'Authentication failed. Please try again.',
-      code: 'AUTH_FAILED'
+    res.status(500).json({ 
+      error: 'Authentication failed. Please try again.' 
     });
   }
 };

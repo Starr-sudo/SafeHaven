@@ -1,58 +1,41 @@
 /**
- * Rate Limiting Middleware - Simplified Version
- * Limits how many requests a user can make
+ * Rate Limiting Middleware
+ * As shown in the README
  */
 
 const rateLimit = require('express-rate-limit');
 
-// Simple rate limiter that just works
-const createRateLimiter = (windowMs, max, message) => {
-  return rateLimit({
-    windowMs,
-    max,
-    message: { error: message },
-    // Don't use custom keyGenerator - let the library handle it
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-};
+// Chat limiter: 30 messages per 15 minutes
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 requests per window
+  message: 'Too many requests, please try again later.'
+});
 
-// Pre-configured limiters for different routes
-const limiters = {
-  // Posts: 10 posts per hour
-  posts: createRateLimiter(
-    60 * 60 * 1000,  // 1 hour
-    10,
-    'You have reached the limit of 10 posts per hour. Please try again later.'
-  ),
-  
-  // Comments: 30 comments per hour
-  comments: createRateLimiter(
-    60 * 60 * 1000,  // 1 hour
-    30,
-    'You have reached the limit of 30 comments per hour. Please try again later.'
-  ),
-  
-  // Chat: 30 messages per 15 minutes
-  chat: createRateLimiter(
-    15 * 60 * 1000,  // 15 minutes
-    30,
-    'Too many messages. Please wait a moment before sending more.'
-  ),
-  
-  // Session creation: 5 sessions per hour
-  session: createRateLimiter(
-    60 * 60 * 1000,  // 1 hour
-    5,
-    'Too many session creations. Please try again later.'
-  ),
-  
-  // General: 100 requests per minute
-  general: createRateLimiter(
-    60 * 1000,  // 1 minute
-    100,
-    'Too many requests. Please slow down.'
-  )
-};
+// Post limiter: 10 posts per hour
+const postLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 posts per hour
+  message: 'Too many posts, please try again later.'
+});
 
-module.exports = limiters;
+// Comment limiter: 30 comments per hour (your addition)
+const commentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // 30 comments per hour
+  message: 'Too many comments, please try again later.'
+});
+
+// General limiter: 100 requests per minute (your addition)
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: 'Too many requests, please try again later.'
+});
+
+module.exports = {
+  chatLimiter,
+  postLimiter,
+  commentLimiter,
+  generalLimiter
+};
