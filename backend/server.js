@@ -102,6 +102,7 @@ app.post('/api/posts/:id/support', authMiddleware, async (req, res) => {
       .single();
 
     if (existing) {
+      // Remove support and decrement count
       await supabase
         .from('post_supports')
         .delete()
@@ -113,12 +114,19 @@ app.post('/api/posts/:id/support', authMiddleware, async (req, res) => {
         .eq('id', id)
         .single();
 
+      const newCount = Math.max(0, (post?.support_count || 0) - 1);
+      await supabase
+        .from('posts')
+        .update({ support_count: newCount })
+        .eq('id', id);
+
       return res.json({
         action: 'removed',
-        support_count: post.support_count
+        support_count: newCount
       });
 
     } else {
+      // Add support and increment count
       await supabase
         .from('post_supports')
         .insert([{ post_id: id, user_anonymous_id }]);
@@ -129,9 +137,15 @@ app.post('/api/posts/:id/support', authMiddleware, async (req, res) => {
         .eq('id', id)
         .single();
 
+      const newCount = (post?.support_count || 0) + 1;
+      await supabase
+        .from('posts')
+        .update({ support_count: newCount })
+        .eq('id', id);
+
       return res.json({
         action: 'added',
-        support_count: post.support_count
+        support_count: newCount
       });
     }
 

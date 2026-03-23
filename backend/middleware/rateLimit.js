@@ -3,7 +3,7 @@
  * As shown in the README
  */
 
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
 // Chat limiter: 30 messages per 15 minutes
 const chatLimiter = rateLimit({

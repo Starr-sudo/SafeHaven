@@ -1,49 +1,52 @@
-# SafeHaven
+# SafeHaven Frontend
 
-A Secure AI-Driven mental health support
+React + TypeScript frontend for SafeHaven mental health support platform. Features a community feed with mood-based posting and an AI-powered chat companion.
 
 ## Features
 
 ### Community Feed
 
-- Anonymous posting with mood indicators (Positive, Neutral, Struggling)
-- Support reactions (heart/like system)
-- Comment system for community engagement
-- Real-time updates with persistent storage
-- Warm, supportive design with mood-based color coding
+- **Anonymous Posting** - Share thoughts with mood indicators (Positive, Neutral, Struggling)
+- **Support System** - Give/receive support on posts with heart reactions
+- **Comments** - Full threaded comments on community posts
+- **Mood Filtering** - Filter posts by emotional tone
+- **Real-time Updates** - View new posts and interactions instantly
+- **Warm Design** - Supportive, color-coded mood visualization
 
 ### AI Chat Companion
 
-- Context-aware AI responses that adapt to conversation history
-- Emotion detection (anxiety, depression, stress, loneliness, etc.)
-- Topic extraction (work, relationships, sleep, therapy, meditation)
-- Supportive, non-judgmental conversational style
-- Visual distinction with emerald/teal color scheme
+- **Context-Aware Responses** - AI adapts to conversation history
+- **Emotion Detection** - Understands anxiety, depression, stress, loneliness, etc.
+- **Topic Extraction** - Recognizes themes (work, relationships, sleep, therapy)
+- **Supportive Tone** - Non-judgmental, empathetic responses
+- **Session Management** - Maintains conversation continuity
+- **Typing Indicators** - Visual feedback while AI is responding
 
 ### Privacy & Safety
 
-- Fully anonymous - no personal data collected
-- Local storage only (ready for backend integration)
-- Clear disclaimers about not replacing professional care
-- Mobile-responsive design with no horizontal scrolling
+- **Fully Anonymous** - No personal data collected
+- **No Sign-up Required** - Immediate access without authentication
+- **Clear Disclaimers** - Transparent about AI limitations
+- **Mobile-Responsive** - Perfect experience on all devices
+- **Accessible UI** - WCAG compliant design
 
 ## Tech Stack
 
-- **Frontend Framework**: React 18 with TypeScript
+- **Framework**: React 18 with TypeScript
 - **Routing**: React Router v7 (Data Mode)
 - **Styling**: Tailwind CSS v4
-- **Icons**: Lucide React
+- **UI Icons**: Lucide React
 - **Build Tool**: Vite
+- **HTTP Client**: Fetch API
 - **Package Manager**: npm
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed on your machine:
+- **Node.js** v18+ - [Download](https://nodejs.org/)
+- **npm** v9+ or yarn
+- **Backend Server** running on <http://localhost:3001> (optional - required for full features)
 
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** (recommended) or yarn
-
-To check if Node.js is installed:
+Check your versions:
 
 ```bash
 node --version
@@ -52,53 +55,371 @@ npm --version
 
 ## Installation
 
-1. **Clone or download this repository** to your local machine
-
-2. **Navigate to the project directory**:
+1. **Clone the repository**:
 
    ```bash
-   cd SafeHaven
+   git clone <repo-url>
+   cd SafeHaven/frontend
    ```
 
-3. **Install dependencies**:
-
-   Using npm (recommended):
+2. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-   Or using yarn:
+3. **Configure environment** (optional):
+   Create `.env` file:
 
-   ```bash
-   yarn install
+   ```
+   VITE_API_URL=http://localhost:3001
    ```
 
 ## Running the Application
 
-1. **Start the development server**:
+### Development Mode
 
-   Using npm:
+```bash
+npm run dev
+```
 
-   ```bash
-   npm run dev
-   ```
+Opens at `http://localhost:5173` (exact port shown in terminal)
 
-   Or using yarn:
+### Production Build
 
-   ```bash
-   yarn dev
-   ```
+```bash
+npm run build
+```
 
-2. **Open your browser** and navigate to:
+Creates optimized build in `dist/` folder
 
-   ```
-   http://localhost:5173
-   ```
+### Deploy Preview
 
-   (The port number may vary - check your terminal output for the exact URL)
+```bash
+npm run preview
+```
 
-3. **The application should now be running!** You'll see:
+Preview production build locally
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── main.tsx                 # Entry point
+│   ├── app/
+│   │   ├── App.tsx              # Root component
+│   │   ├── routes.tsx           # Route definitions
+│   │   ├── components/
+│   │   │   ├── Layout.tsx       # Main layout wrapper
+│   │   │   └── ui/              # Shadcn UI components
+│   │   ├── pages/
+│   │   │   ├── AIChat.tsx       # Chat page
+│   │   │   └── CommunityFeed.tsx # Feed page
+│   │   └── services/
+│   │       ├── ai.ts           # AI chat API client
+│   │       └── storage.ts      # Posts/comments API client
+│   └── styles/
+│       ├── index.css           # Global styles
+│       ├── tailwind.css        # Tailwind config
+│       └── theme.css           # Theme variables
+├── index.html
+├── vite.config.ts
+└── package.json
+```
+
+## API Integration
+
+### Backend Connection
+
+The frontend connects to the backend API at `http://localhost:3001` (configurable via `VITE_API_URL`).
+
+**Services**:
+
+- **`src/app/services/storage.ts`** - Posts, comments, support
+- **`src/app/services/ai.ts`** - AI chat responses
+
+**Authentication**:
+All API requests include an anonymous user ID header:
+
+```
+x-anonymous-user-id: user_[timestamp]_[randomstring]
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_API_URL` | `http://localhost:3001` | Backend API URL |
+
+## Running Backend & Frontend Together
+
+Open two terminals:
+
+**Terminal 1 - Backend** (from `SafeHaven/backend/`):
+
+```bash
+npm start
+```
+
+Runs on `http://localhost:3001`
+
+**Terminal 2 - Frontend** (from `SafeHaven/frontend/`):
+
+```bash
+npm run dev
+```
+
+Runs on `http://localhost:5173`
+
+Then open your browser to `http://localhost:5173`
+
+## Development Workflow
+
+### Adding a New Route
+
+1. Add route definition in `src/app/routes.tsx`
+2. Create page component in `src/app/pages/`
+3. Import in routes file
+4. Navigation updates automatically via React Router
+
+### Adding a New API Call
+
+1. Add function in `src/app/services/`
+2. Include authentication header with user ID
+3. Handle errors gracefully
+4. Return typed data
+
+Example:
+
+```typescript
+export const getMyData = async (): Promise<Data[]> => {
+  const userId = getUserId();
+  const response = await fetch(`${API_URL}/api/data`, {
+    headers: {
+      "x-anonymous-user-id": userId,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  
+  const json = await response.json();
+  return json.data;
+};
+```
+
+### Styling
+
+Uses Tailwind CSS v4 with custom theme:
+
+- **Colors**: Purple/pink gradient primary, emerald accent
+- **Components**: Pre-built shadcn UI components in `src/app/components/ui/`
+- **Responsive**: Mobile-first design with `sm:`, `md:` breakpoints
+
+### Using UI Components
+
+All components imported from `src/app/components/ui/`:
+
+```typescript
+import { Button } from "@/app/components/ui/button";
+import { Card } from "@/app/components/ui/card";
+
+export function MyComponent() {
+  return (
+    <Card>
+      <Button>Click me</Button>
+    </Card>
+  );
+}
+```
+
+## Features Breakdown
+
+### Community Feed (`pages/CommunityFeed.tsx`)
+
+**Capabilities**:
+
+- Create posts with mood selection
+- View feed of community posts
+- Support posts with heart reactions
+- View/add comments on posts (expands inline)
+- Real-time count updates
+
+**State Management**:
+
+- Posts loaded on mount
+- Expandable comments sections per post
+- Local comment storage while typing
+
+### AI Chat (`pages/AIChat.tsx`)
+
+**Capabilities**:
+
+- Send messages to AI companion
+- View typing indicators
+- Maintain conversation history
+- Auto-scroll to latest messages
+- Send on Enter (Shift+Enter for newline)
+
+**Features**:
+
+- Context-aware responses using conversation history
+- Emotion detection from messages
+- Supportive, empathetic tone
+- Fallback local responses if backend unavailable
+
+## Performance Optimizations
+
+- **Code Splitting**: Route-based lazy loading
+- **Tree Shaking**: Unused code removed in production build
+- **Asset Optimization**: Vite handles image/font optimization
+- **Caching**: Service-friendly API responses
+- **Debouncing**: Form inputs don't hammer server
+
+## Browser Support
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Mobile browsers (iOS Safari 14+, Chrome Mobile)
+
+## Troubleshooting
+
+### Backend Connection Issues
+
+**Error**: "Cannot reach API"
+
+- Check backend is running on port 3001
+- Verify `VITE_API_URL` in `.env`
+- Check CORS is enabled in backend
+
+**Error**: "Missing user ID"
+
+- Clear browser storage: `localStorage.clear()`
+- Refresh page
+- Check console for auth errors
+
+### Build Issues
+
+**Error**: "Port 5173 already in use"
+
+```bash
+# Find process on port 5173
+lsof -i :5173
+# Kill it
+kill -9 <PID>
+```
+
+**Error**: "Module not found"
+
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules
+npm install
+```
+
+### UI Not Loading
+
+- Check Tailwind CSS compiled in dev tools
+- Verify `tailwind.config.ts` includes all template paths
+- Check for conflicting CSS
+
+## Build & Deployment
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+Creates optimized `dist/` folder ready for deployment.
+
+### Deploy to Vercel
+
+```bash
+npm install -g vercel
+vercel
+```
+
+Automatically detects Vite project and deploys.
+
+### Deploy to Netlify
+
+1. Push to GitHub
+2. Connect repo to Netlify
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+
+### Deploy to GitHub Pages
+
+```bash
+npm install -g gh-pages
+npm run build
+npx gh-pages -d dist
+```
+
+## Available Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview build locally |
+| `npm run lint` | Run ESLint |
+
+## Contributing
+
+1. Create feature branch: `git checkout -b feature/my-feature`
+2. Make changes
+3. Test locally: `npm run dev`
+4. Commit: `git commit -m "Add my feature"`
+5. Push: `git push origin feature/my-feature`
+6. Open Pull Request
+
+## Code Style
+
+- **TypeScript**: Strict mode enabled
+- **Formatting**: Follows Prettier defaults
+- **Linting**: ESLint configured
+- **Components**: Functional components with hooks
+
+## Security
+
+- **No PII Storage**: Fully anonymous
+- **HTTPS Only**: In production
+- **XSS Protection**: React escapes content
+- **CSRF Tokens**: Not needed (anonymous users)
+- **Content Security Policy**: Configured in headers
+
+## Accessibility
+
+- **WCAG 2.1 AA Compliant**: Keyboard navigation
+- **Screen Readers**: Semantic HTML, ARIA labels
+- **Color Contrast**: WCAG AA standards met
+- **Focus Management**: Clear focus indicators
+
+## License
+
+See [LICENSE](../LICENSE) in root directory.
+
+## Support
+
+For frontend issues:
+
+1. Check console for error messages
+2. Verify backend is running
+3. Check browser DevTools Network tab
+4. Review [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md)
+
+For feature requests or bugs, open an issue on GitHub.
+
+---
+
+**Made with ❤️ for mental health support**
+
+1. **The application should now be running!** You'll see:
    - The Safehaven homepage with navigation
    - Community Feed page (default view)
    - AI Chat page accessible via navigation

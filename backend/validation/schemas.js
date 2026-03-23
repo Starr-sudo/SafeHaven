@@ -3,7 +3,7 @@
  * Defines rules for all user input
  */
 
-const { z } = require('zod');
+import { z } from 'zod';
 
 // Post schema
 const postSchema = z.object({

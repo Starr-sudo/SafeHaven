@@ -34,7 +34,7 @@ export function AIChat() {
 
     try {
       // Backend equivalent: POST /api/chat with message and conversation history
-      const aiResponseContent = await generateAIResponse(currentInput);
+      const aiResponseContent = await generateAIResponse(currentInput, [...messages, userMessage]);
       
       const aiResponse: ChatMessage = {
         id: `assistant_${Date.now()}`,

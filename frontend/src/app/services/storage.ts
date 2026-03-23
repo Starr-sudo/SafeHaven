@@ -1,6 +1,4 @@
-// Storage service for community posts
-// This simulates backend storage using localStorage
-// Replace with actual API calls when backend is ready
+// Storage service for community posts (API-only)
 
 export interface Post {
   id: string;
@@ -10,7 +8,7 @@ export interface Post {
   timestamp: string;
   supportCount: number;
   commentCount: number;
-  supportedBy: string[]; // Track which users supported this post
+  supportedBy: string[];
   createdAt: number;
 }
 
@@ -23,174 +21,131 @@ export interface Comment {
   createdAt: number;
 }
 
-const POSTS_KEY = "safehaven_posts";
-const COMMENTS_KEY = "safehaven_comments";
-const USER_ID_KEY = "safehaven_user_id";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-// Generate a persistent anonymous user ID
+let anonymousUserId = "";
+
 export const getUserId = (): string => {
-  let userId = localStorage.getItem(USER_ID_KEY);
-  if (!userId) {
-    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem(USER_ID_KEY, userId);
+  if (!anonymousUserId) {
+    anonymousUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-  return userId;
+  return anonymousUserId;
 };
 
-// Get all posts from storage
-export const getPosts = (): Post[] => {
-  try {
-    const postsJson = localStorage.getItem(POSTS_KEY);
-    if (!postsJson) return [];
-    const posts = JSON.parse(postsJson);
-    return posts.sort((a: Post, b: Post) => b.createdAt - a.createdAt);
-  } catch (error) {
-    console.error("Error loading posts:", error);
-    return [];
+const normalizePost = (post: any): Post => ({
+  id: post.id,
+  author: post.author ?? "Anonymous User",
+  content: post.content,
+  mood: post.mood,
+  timestamp: post.created_at ? new Date(post.created_at).toLocaleString() : post.timestamp,
+  supportCount: post.support_count ?? post.supportCount ?? 0,
+  commentCount: post.comment_count ?? post.commentCount ?? 0,
+  supportedBy: post.supported_by ?? post.supportedBy ?? [],
+  createdAt: post.created_at ? new Date(post.created_at).getTime() : post.createdAt ?? Date.now(),
+});
+
+export const getPosts = async (): Promise<Post[]> => {
+  const response = await fetch(`${API_URL}/api/posts`);
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
   }
+
+  const json = await response.json();
+  return ((json.posts ?? []) as any[])
+    .map(normalizePost)
+    .sort((a, b) => b.createdAt - a.createdAt);
 };
 
-// Save a new post
-// Backend equivalent: POST /api/posts
-export const createPost = (content: string, mood: Post["mood"]): Post => {
-  const posts = getPosts();
-  const newPost: Post = {
-    id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    author: "Anonymous User",
-    content,
-    mood,
-    timestamp: new Date().toLocaleString(),
-    supportCount: 0,
-    commentCount: 0,
-    supportedBy: [],
-    createdAt: Date.now(),
-  };
-  
-  posts.unshift(newPost);
-  localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
-  
-  // In a real backend, this would trigger a database insert and return the created post
-  return newPost;
-};
-
-// Toggle support on a post
-// Backend equivalent: POST /api/posts/:id/support
-export const toggleSupport = (postId: string): Post | null => {
-  const posts = getPosts();
+export const createPost = async (content: string, mood: Post["mood"]): Promise<Post> => {
   const userId = getUserId();
-  const postIndex = posts.findIndex(p => p.id === postId);
-  
+  const response = await fetch(`${API_URL}/api/posts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-anonymous-user-id": userId,
+    },
+    body: JSON.stringify({ content, mood }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  return normalizePost(json.post ?? json);
+};
+
+export const toggleSupport = async (postId: string): Promise<Post | null> => {
+  const userId = getUserId();
+
+  const response = await fetch(`${API_URL}/api/posts/${postId}/support`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-anonymous-user-id": userId,
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  const posts = await getPosts();
+  const postIndex = posts.findIndex((p) => p.id === postId);
   if (postIndex === -1) return null;
-  
-  const post = posts[postIndex];
-  const hasSupported = post.supportedBy.includes(userId);
-  
-  if (hasSupported) {
-    post.supportedBy = post.supportedBy.filter(id => id !== userId);
-    post.supportCount = Math.max(0, post.supportCount - 1);
-  } else {
-    post.supportedBy.push(userId);
-    post.supportCount += 1;
-  }
-  
-  localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
-  return post;
+
+  const updatedPost = { ...posts[postIndex], supportCount: json.support_count };
+  return updatedPost;
 };
 
-// Get comments for a post
-export const getComments = (postId: string): Comment[] => {
-  try {
-    const commentsJson = localStorage.getItem(COMMENTS_KEY);
-    if (!commentsJson) return [];
-    const allComments: Comment[] = JSON.parse(commentsJson);
-    return allComments
-      .filter(c => c.postId === postId)
-      .sort((a, b) => a.createdAt - b.createdAt);
-  } catch (error) {
-    console.error("Error loading comments:", error);
-    return [];
+export const getComments = async (postId: string): Promise<Comment[]> => {
+  const userId = getUserId();
+  const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
+    headers: {
+      "x-anonymous-user-id": userId,
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
   }
+
+  const json = await response.json();
+  return (json.comments ?? []).map((c: any) => ({
+    id: c.id,
+    postId: c.post_id,
+    author: c.author ?? "Anonymous User",
+    content: c.content,
+    timestamp: c.created_at ? new Date(c.created_at).toLocaleString() : c.timestamp,
+    createdAt: c.created_at ? new Date(c.created_at).getTime() : c.createdAt ?? Date.now(),
+  })).sort((a: Comment, b: Comment) => a.createdAt - b.createdAt);
 };
 
-// Add a comment to a post
-// Backend equivalent: POST /api/posts/:id/comments
-export const addComment = (postId: string, content: string): Comment => {
-  const posts = getPosts();
-  const comments = getAllComments();
-  
-  const newComment: Comment = {
-    id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+export const addComment = async (postId: string, content: string): Promise<Comment> => {
+  const userId = getUserId();
+  const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-anonymous-user-id": userId,
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  const comment = json.comment ?? json;
+
+  return {
+    id: comment.id,
     postId,
-    author: "Anonymous User",
-    content,
-    timestamp: new Date().toLocaleString(),
-    createdAt: Date.now(),
+    author: comment.author ?? "Anonymous User",
+    content: comment.content,
+    timestamp: comment.created_at ? new Date(comment.created_at).toLocaleString() : new Date().toLocaleString(),
+    createdAt: comment.created_at ? new Date(comment.created_at).getTime() : Date.now(),
   };
-  
-  comments.push(newComment);
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-  
-  // Update comment count on the post
-  const postIndex = posts.findIndex(p => p.id === postId);
-  if (postIndex !== -1) {
-    posts[postIndex].commentCount += 1;
-    localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
-  }
-  
-  return newComment;
-};
-
-// Get all comments (helper function)
-const getAllComments = (): Comment[] => {
-  try {
-    const commentsJson = localStorage.getItem(COMMENTS_KEY);
-    return commentsJson ? JSON.parse(commentsJson) : [];
-  } catch (error) {
-    console.error("Error loading comments:", error);
-    return [];
-  }
-};
-
-// Initialize with some sample posts if empty
-export const initializeSampleData = () => {
-  const posts = getPosts();
-  if (posts.length === 0) {
-    const samplePosts: Post[] = [
-      {
-        id: "sample_1",
-        author: "Anonymous User",
-        content: "Today was really challenging. I'm trying to stay positive and take things one step at a time.",
-        mood: "Neutral",
-        timestamp: new Date(Date.now() - 3600000).toLocaleString(),
-        supportCount: 12,
-        commentCount: 3,
-        supportedBy: [],
-        createdAt: Date.now() - 3600000,
-      },
-      {
-        id: "sample_2",
-        author: "Anonymous User",
-        content: "Just wanted to share that I've been practicing mindfulness for a week now and it's really helping with my anxiety.",
-        mood: "Positive",
-        timestamp: new Date(Date.now() - 7200000).toLocaleString(),
-        supportCount: 24,
-        commentCount: 5,
-        supportedBy: [],
-        createdAt: Date.now() - 7200000,
-      },
-      {
-        id: "sample_3",
-        author: "Anonymous User",
-        content: "Feeling overwhelmed by everything. Sometimes it feels like too much to handle.",
-        mood: "Negative",
-        timestamp: new Date(Date.now() - 10800000).toLocaleString(),
-        supportCount: 18,
-        commentCount: 7,
-        supportedBy: [],
-        createdAt: Date.now() - 10800000,
-      },
-    ];
-    
-    localStorage.setItem(POSTS_KEY, JSON.stringify(samplePosts));
-  }
 };
