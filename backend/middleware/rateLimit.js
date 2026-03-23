@@ -33,7 +33,7 @@ const generalLimiter = rateLimit({
   message: 'Too many requests, please try again later.'
 });
 
-module.exports = {
+export {
   chatLimiter,
   postLimiter,
   commentLimiter,

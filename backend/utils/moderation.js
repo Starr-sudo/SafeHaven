@@ -30,4 +30,4 @@ function moderateContent(content) {
   return moderated;
 }
 
-module.exports = { moderateContent };
+export { moderateContent };

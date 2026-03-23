@@ -23,4 +23,4 @@ const validate = (schema) => {
   };
 };
 
-module.exports = validate;
+export default validate;

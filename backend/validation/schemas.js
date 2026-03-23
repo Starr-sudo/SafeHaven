@@ -35,7 +35,7 @@ const chatSchema = z.object({
   ).max(50).optional()
 });
 
-module.exports = {
+export {
   postSchema,
   commentSchema,
   chatSchema

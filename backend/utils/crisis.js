@@ -29,4 +29,4 @@ If you're in immediate danger, please call emergency services (911 in the US) or
   };
 }
 
-module.exports = { detectCrisis, getCrisisResponse };
+export { detectCrisis, getCrisisResponse };
