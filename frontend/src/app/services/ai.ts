@@ -82,7 +82,7 @@ export const getInitialGreeting = (): ChatMessage => {
   return {
     id: "initial_greeting",
     role: "assistant",
-    content: "Hello, I'm here to listen and support you.",
+    content: "Hello, I'm here to listen and support you. This is a safe space to share what's on your mind. How are you feeling today?",
     timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     createdAt: Date.now(),
   };
