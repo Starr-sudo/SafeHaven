@@ -19,11 +19,20 @@ const allowedOrigins = [
   process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : null,
 ].filter(Boolean);
 
+const isAllowedDevOrigin = (origin) => {
+  if (process.env.NODE_ENV === 'production') return false;
+
+  // Allow Vite/localhost dev servers even if the port auto-changes (e.g. 5174).
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+};
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow non-browser requests like curl/postman without origin header.
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedOrigins.includes(origin) || isAllowedDevOrigin(origin)) {
+      return callback(null, true);
+    }
     return callback(new Error('CORS blocked: origin not allowed'));
   }
 }));
@@ -297,6 +306,8 @@ Assistant:
   }
 });
 
-app.listen(3001, () => {
-  console.log('Server running on port 3001');
+const port = Number(process.env.PORT) || 3001;
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
