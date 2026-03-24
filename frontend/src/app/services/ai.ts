@@ -10,7 +10,7 @@ export interface ChatMessage {
 }
 
 // API configuration
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "https://project-safehaven.vercel.app/";
 
 // Anonymous user ID management
 let anonymousUserId = "";
