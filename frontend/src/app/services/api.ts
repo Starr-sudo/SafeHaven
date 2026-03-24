@@ -47,11 +47,10 @@ const resolveApiBaseUrl = (): string => {
   }
 
   console.warn(
-    "VITE_API_URL is not set. Falling back to same-origin /api requests. Set VITE_API_URL in your frontend deployment for a separate backend."
+    `VITE_API_URL is not set. Falling back to ${KNOWN_BACKEND_URL}. Set VITE_API_URL in your frontend deployment for a separate backend.`
   );
 
-  // In production, fall back to same-origin so deployments can use rewrites/proxies.
-  return "";
+  return KNOWN_BACKEND_URL;
 };
 
 export const API_BASE_URL = resolveApiBaseUrl();
