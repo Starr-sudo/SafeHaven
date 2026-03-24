@@ -21,7 +21,7 @@ export interface Comment {
   createdAt: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "https://project-safehaven.vercel.app/";
 
 let anonymousUserId = "";
 

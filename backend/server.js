@@ -16,7 +16,7 @@ const app = express();
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : null,
+  process.env.NODE_ENV !== 'production' ? 'https://project-safehaven.vercel.app/' : null,
 ].filter(Boolean);
 
 const isAllowedDevOrigin = (origin) => {
