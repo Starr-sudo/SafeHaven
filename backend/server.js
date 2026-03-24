@@ -22,7 +22,7 @@ const allowedOrigins = [
 const isAllowedDevOrigin = (origin) => {
   if (process.env.NODE_ENV === 'production') return false;
 
-  // Allow Vite/localhost dev servers even if the port auto-changes (e.g. 5174).
+  // Allow Vite/localhost dev servers even if the port auto-changes
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 };
 

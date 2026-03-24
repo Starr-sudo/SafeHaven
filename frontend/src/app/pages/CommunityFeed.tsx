@@ -10,6 +10,8 @@ export function CommunityFeed() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [newComments, setNewComments] = useState<Record<string, string>>({});
   const [loadingComments, setLoadingComments] = useState<Record<string, boolean>>({});
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
 
   // Load posts from API on mount
   useEffect(() => {
@@ -17,17 +19,33 @@ export function CommunityFeed() {
   }, []);
 
   const loadPosts = async () => {
-    const loadedPosts = await getPosts();
-    setPosts(loadedPosts);
+    setIsLoadingPosts(true);
+    setFeedError(null);
+
+    try {
+      const loadedPosts = await getPosts();
+      setPosts(loadedPosts);
+    } catch (error) {
+      console.error("Error loading posts:", error);
+      setFeedError("Unable to load community posts right now. Check that the backend is running on localhost:3001.");
+    } finally {
+      setIsLoadingPosts(false);
+    }
   };
 
   const handleCreatePost = async () => {
     if (newPost.trim()) {
-      // Backend equivalent: POST /api/posts
-      const post = await createPost(newPost, selectedMood);
-      setPosts((prev) => [post, ...prev]);
-      setNewPost("");
-      setSelectedMood("Neutral");
+      setFeedError(null);
+
+      try {
+        const post = await createPost(newPost, selectedMood);
+        setPosts((prev) => [post, ...prev]);
+        setNewPost("");
+        setSelectedMood("Neutral");
+      } catch (error) {
+        console.error("Error creating post:", error);
+        setFeedError("Unable to publish your post right now. Check that the backend is running and reachable.");
+      }
     }
   };
 
@@ -166,7 +184,20 @@ export function CommunityFeed() {
 
       <div className="flex flex-col gap-3 sm:gap-4">
         <h2 className="text-base sm:text-lg font-semibold text-purple-900">Community Posts</h2>
-        {posts.map((post) => (
+        {feedError && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
+            {feedError}
+          </div>
+        )}
+        {isLoadingPosts ? (
+          <div className="rounded-xl border border-purple-200 bg-white/70 px-4 py-6 text-sm text-gray-600 shadow-sm">
+            Loading posts...
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="rounded-xl border border-purple-200 bg-white/70 px-4 py-6 text-sm text-gray-600 shadow-sm">
+            No community posts yet.
+          </div>
+        ) : posts.map((post) => (
           <div
             key={post.id}
             className={`border rounded-xl p-4 sm:p-6 shadow-md backdrop-blur-sm ${getMoodColor(post.mood)}`}
