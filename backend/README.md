@@ -34,20 +34,26 @@ Express.js backend for the SafeHaven mental health support platform. Provides AP
 ## Installation
 
 1. **Clone the repository**:
+
    ```bash
    cd SafeHaven/backend
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables** - Create a `.env` file:
+
    ```
    SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_anon_key
+
+  SUPABASE_ANON_KEY=your_supabase_anon_key
    GEMINI_API_KEY=your_gemini_api_key
+  FRONTEND_URLS=<https://your-frontend.vercel.app>
+
    ```
 
 4. **Set up database** - Run the SQL schema in your Supabase instance (see [Database Setup](#database-setup) below)
@@ -60,6 +66,7 @@ npm start
 ```
 
 **Watch mode** (with auto-reload):
+
 ```bash
 npm run dev
 ```
@@ -71,19 +78,23 @@ Server runs on `http://localhost:3001`
 ### Posts
 
 #### GET `/api/posts`
+
 Retrieve all community posts with optional filtering.
 
 **Query Parameters**:
+
 - `limit` (default: 20) - Number of posts to return
 - `offset` (default: 0) - Pagination offset
 - `mood` (optional) - Filter by mood: "Positive", "Neutral", or "Negative"
 
 **Example**:
+
 ```bash
 curl http://localhost:3001/api/posts?limit=10&mood=Positive
 ```
 
 **Response**:
+
 ```json
 {
   "posts": [
@@ -103,15 +114,18 @@ curl http://localhost:3001/api/posts?limit=10&mood=Positive
 ```
 
 #### POST `/api/posts`
+
 Create a new community post. **Requires authentication**.
 
 **Headers**:
+
 ```
 Content-Type: application/json
 x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Body**:
+
 ```json
 {
   "content": "How are you feeling today?",
@@ -120,6 +134,7 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Response** (201):
+
 ```json
 {
   "post": {
@@ -137,9 +152,11 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ### Support
 
 #### POST `/api/posts/:id/support`
+
 Toggle support (like) on a post. **Requires authentication**.
 
 **Headers**:
+
 ```
 Content-Type: application/json
 x-anonymous-user-id: user_[timestamp]_[randomstring]
@@ -148,6 +165,7 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 **Body**: `{}`
 
 **Response**:
+
 ```json
 {
   "action": "added",
@@ -158,9 +176,11 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ### Comments
 
 #### GET `/api/posts/:id/comments`
+
 Get all comments for a post. **Requires authentication**.
 
 **Response**:
+
 ```json
 {
   "comments": [
@@ -176,15 +196,18 @@ Get all comments for a post. **Requires authentication**.
 ```
 
 #### POST `/api/posts/:id/comments`
+
 Add a comment to a post. **Requires authentication**.
 
 **Headers**:
+
 ```
 Content-Type: application/json
 x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Body**:
+
 ```json
 {
   "content": "I can relate to this!"
@@ -192,6 +215,7 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Response** (201):
+
 ```json
 {
   "comment": {
@@ -207,15 +231,18 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ### Chat
 
 #### POST `/api/chat`
+
 Send a message to the AI chat companion. **Requires authentication**.
 
 **Headers**:
+
 ```
 Content-Type: application/json
 x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Body**:
+
 ```json
 {
   "message": "I'm feeling anxious",
@@ -234,6 +261,7 @@ x-anonymous-user-id: user_[timestamp]_[randomstring]
 ```
 
 **Response**:
+
 ```json
 {
   "response": "I hear that you're feeling anxious. That's a valid emotion...",
@@ -332,6 +360,7 @@ server.js           # Main Express app and route handlers
 ## Error Handling
 
 All errors return appropriate HTTP status codes:
+
 - `400` - Bad request (validation error)
 - `401` - Missing/invalid authentication
 - `429` - Rate limit exceeded
@@ -342,8 +371,9 @@ All errors return appropriate HTTP status codes:
 | Variable | Description |
 |----------|-------------|
 | `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_KEY` | Your Supabase anon public key |
+| `SUPABASE_ANON_KEY` | Your Supabase anon public key |
 | `GEMINI_API_KEY` | Your Google Gemini API key |
+| `FRONTEND_URLS` | Comma-separated allowed frontend origins for CORS |
 
 ## Middleware Stack
 
@@ -367,17 +397,20 @@ All errors return appropriate HTTP status codes:
 ## Deployment
 
 ### Vercel
+
 ```bash
 vercel deploy
 ```
 
 ### Fly.io
+
 ```bash
 flyctl launch
 flyctl deploy
 ```
 
 ### Docker
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -390,6 +423,7 @@ CMD ["npm", "start"]
 ## Development
 
 **File Structure**:
+
 ```
 backend/
 ├── server.js              # Main app
@@ -402,6 +436,7 @@ backend/
 ```
 
 **Adding new endpoints**:
+
 1. Create validation schema in `validation/schemas.js`
 2. Add middleware as needed
 3. Add route handler in `server.js`
@@ -410,21 +445,25 @@ backend/
 ## Troubleshooting
 
 **"Missing user ID" error**
+
 - Ensure `x-anonymous-user-id` header is included in requests
 - Format should be `user_[timestamp]_[random]`
 
 **"Cannot read properties of null" error**
+
 - Post ID may not exist in database
 - Verify post was created successfully first
 
 **Supabase connection error**
-- Check `SUPABASE_URL` and `SUPABASE_KEY` in `.env`
+
+- Check `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env`
 - Verify internet connection
 - Check Supabase project status
 
 ## Support
 
 For issues with the backend, check:
+
 1. Console logs in terminal
 2. Network tab in browser dev tools
 3. Supabase dashboard for database issues

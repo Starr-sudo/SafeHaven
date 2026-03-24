@@ -1,5 +1,7 @@
 // Storage service for community posts (API-only)
 
+import { API_BASE_URL } from "./api";
+
 export interface Post {
   id: string;
   author: string;
@@ -21,7 +23,7 @@ export interface Comment {
   createdAt: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "https://project-safehaven.vercel.app/";
+const API_URL = API_BASE_URL;
 
 let anonymousUserId = "";
 

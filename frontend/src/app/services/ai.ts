@@ -1,6 +1,8 @@
 // AI Service for mental health support conversations
 // Uses Google Gemini AI via backend API
 
+import { API_BASE_URL } from "./api";
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -10,7 +12,7 @@ export interface ChatMessage {
 }
 
 // API configuration
-const API_URL = import.meta.env.VITE_API_URL || "https://project-safehaven.vercel.app/";
+const API_URL = API_BASE_URL;
 
 // Anonymous user ID management
 let anonymousUserId = "";

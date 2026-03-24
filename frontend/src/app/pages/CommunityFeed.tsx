@@ -27,7 +27,7 @@ export function CommunityFeed() {
       setPosts(loadedPosts);
     } catch (error) {
       console.error("Error loading posts:", error);
-      setFeedError("Unable to load community posts right now. Check that the backend is running on localhost:3001.");
+      setFeedError("Unable to load community posts right now. Please check backend connectivity and API configuration.");
     } finally {
       setIsLoadingPosts(false);
     }
@@ -44,7 +44,7 @@ export function CommunityFeed() {
         setSelectedMood("Neutral");
       } catch (error) {
         console.error("Error creating post:", error);
-        setFeedError("Unable to publish your post right now. Check that the backend is running and reachable.");
+        setFeedError("Unable to publish your post right now. Please check backend connectivity and API configuration.");
       }
     }
   };

@@ -14,26 +14,31 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 const app = express();
 
+const configuredOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.NODE_ENV !== 'production' ? 'https://project-safehaven.vercel.app/' : null,
-].filter(Boolean);
+  ...configuredOrigins,
+  'https://project-safehaven.vercel.app'
+];
 
-const isAllowedDevOrigin = (origin) => {
-  if (process.env.NODE_ENV === 'production') return false;
-
-  // Allow Vite/localhost dev servers even if the port auto-changes
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  if (/^https?:\/\/localhost(:\d+)?$/i.test(origin)) return true;
+  if (/^https:\/\/.+\.vercel\.app$/i.test(origin)) return true;
+  return false;
 };
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests like curl/postman without origin header.
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || isAllowedDevOrigin(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('CORS blocked: origin not allowed'));
+
+    return callback(new Error("CORS blocked: origin not allowed"));
   }
 }));
 app.use(express.json());
@@ -47,13 +52,15 @@ app.get('/', (req, res) => {
 
 app.get('/api/posts', async (req, res) => {
   const { limit = 20, offset = 0, mood } = req.query;
+  const parsedLimit = Math.min(100, Math.max(1, Number.parseInt(String(limit), 10) || 20));
+  const parsedOffset = Math.max(0, Number.parseInt(String(offset), 10) || 0);
 
   try {
     let query = supabase
       .from('posts')
       .select('*')
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(parsedOffset, parsedOffset + parsedLimit - 1);
 
     if (mood) {
       query = query.eq('mood', mood);
@@ -65,8 +72,8 @@ app.get('/api/posts', async (req, res) => {
 
     res.json({
       posts: data,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+      limit: parsedLimit,
+      offset: parsedOffset
     });
 
   } catch (err) {
