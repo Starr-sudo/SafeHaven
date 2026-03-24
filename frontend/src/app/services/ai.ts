@@ -9,8 +9,11 @@ export interface ChatMessage {
   createdAt: number;
 }
 
-// API configuration
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+// API configuration - supports Vite (VITE_) and Vercel/Next.js (NEXT_PUBLIC_) env var naming
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+  "";
 
 // Anonymous user ID management
 let anonymousUserId = "";
@@ -29,6 +32,10 @@ export const generateAIResponse = async (
   conversationHistory: ChatMessage[] = []
 ): Promise<string> => {
   const userId = getUserId();
+
+  if (!API_URL) {
+    throw new Error("AI chat is not available: no backend API URL is configured. Set VITE_API_URL or NEXT_PUBLIC_API_URL.");
+  }
 
   try {
     const response = await fetch(`${API_URL}/api/chat`, {
@@ -68,7 +75,7 @@ export const generateAIResponse = async (
       throw new Error("Unable to connect to the server. Please check your internet connection.");
     }
 
-    throw new Error("I'm having trouble connecting right now. Please try again in a moment.");
+    throw error instanceof Error ? error : new Error("I'm having trouble connecting right now. Please try again in a moment.");
   }
 };
 
