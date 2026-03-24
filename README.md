@@ -11,3 +11,7 @@ It is designed for privacy-first local storage and easy backend integration late
 
 - `frontend/` — React + Vite frontend app
 - `backend/` — Backend APIs and services
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for step-by-step instructions on how to deploy your own fork of SafeHaven to Vercel (no repository ownership required).

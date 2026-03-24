@@ -285,6 +285,14 @@ Assistant:
   }
 });
 
-app.listen(3001, () => {
-  console.log('Server running on port 3001');
-});
+const PORT = process.env.PORT || 3001;
+
+// Start the HTTP server only in local development.
+// On Vercel, the app is exported as a serverless handler below.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
